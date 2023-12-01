@@ -13,19 +13,16 @@ function createCard(cardData, deleteCallback) {
   cardElement.querySelector('.card__image').alt = cardData.name;
 
   cardElement.querySelector('.card__delete-button').addEventListener('click', function() {
+    deleteCard(cardElement);
     deleteCallback(cardData);
-    cardElement.remove();
   });
 
   return cardElement;
 }
 
 // @todo: Функция удаления карточки
-function deleteCard(cardData) {
-  const cardIndex = initialCards.findIndex(card => card.name === cardData.name);
-  if (cardIndex !== -1) {
-    initialCards.splice(cardIndex, 1);
-  }
+function deleteCard(cardElement) {
+  cardElement.remove();
 }
 
 // @todo: Вывести карточки на страницу
@@ -38,6 +35,3 @@ function renderCards(cardsArray, deleteCallback) {
 }
 
 renderCards(initialCards, deleteCard);
-
-
-
