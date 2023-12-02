@@ -13,8 +13,7 @@ function createCard(cardData, deleteCallback) {
   cardElement.querySelector('.card__image').alt = cardData.name;
 
   cardElement.querySelector('.card__delete-button').addEventListener('click', function() {
-    deleteCard(cardElement);
-    deleteCallback(cardData);
+    deleteCallback(cardElement);
   });
 
   return cardElement;
