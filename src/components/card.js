@@ -1,16 +1,22 @@
 let cardTemplate;
+export let likeCallback;
 
 export function setCardTemplate(template) {
   cardTemplate = template;
 }
 
-export function createCard(cardData, deleteCallback, openImagePopup, likeCallback) {
+export function setLikeCallback(callback) {
+  likeCallback = callback;
+}
+
+export function createCard(cardData, deleteCallback, openImagePopup) {
 
   const cardElement = cardTemplate.cloneNode(true);
 
   const cardTitle = cardElement.querySelector('.card__title');
   const cardImage = cardElement.querySelector('.card__image');
   const deleteButton = cardElement.querySelector('.card__delete-button');
+  const likeButton = cardElement.querySelector('.card__like-button');
 
   cardTitle.textContent = cardData.name;
   cardImage.src = cardData.link;
@@ -24,9 +30,12 @@ export function createCard(cardData, deleteCallback, openImagePopup, likeCallbac
     openImagePopup(cardData.link);
   });
 
-  const likeButton = cardElement.querySelector('.card__like-button');
   likeButton.addEventListener('click', function () {
-    likeCallback(cardData, likeButton);
+    likeButton.classList.toggle('card__like-button_is-active');
+
+    if (likeCallback) {
+      likeCallback(cardElement, cardData);
+    }
   });
 
   return cardElement;
