@@ -5,11 +5,11 @@ export function setCardTemplate(template) {
   cardTemplate = template;
 }
 
-export function setLikeCallback(callback) {
-  likeCallback = callback;
+function handleLikeCard(buttonLike) {
+  buttonLike.classList.toggle('card__like-button_is-active');
 }
 
-export function createCard(cardData, deleteCallback, openImagePopup) {
+export function createCard(cardData, deleteCallback, openImagePopup, likeCallback) {
 
   const cardElement = cardTemplate.cloneNode(true);
 
@@ -31,7 +31,7 @@ export function createCard(cardData, deleteCallback, openImagePopup) {
   });
 
   likeButton.addEventListener('click', function () {
-    likeButton.classList.toggle('card__like-button_is-active');
+    handleLikeCard(likeButton);
 
     if (likeCallback) {
       likeCallback(cardElement, cardData);

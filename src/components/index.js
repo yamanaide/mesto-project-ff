@@ -1,8 +1,8 @@
 import '/src/pages/index.css';
 
-import { createCard, deleteCard, setCardTemplate, setLikeCallback, likeCallback } from './card.js';
+import { createCard, deleteCard, setCardTemplate } from './card.js';
 import { initialCards } from './cards.js';
-import { openModal, closeModal } from './modal.js';
+import { openModal, closeModal, closeOverlayClick, closeEscPopup, handleCloseButtonClick } from './modal.js';
 
 const cardTemplate = document.querySelector('#card-template').content.querySelector('.places__item');
 const placesList = document.querySelector('.places__list');
@@ -12,17 +12,22 @@ const imagePopup = document.querySelector('.popup_type_image');
 const profileTitle = document.querySelector('.profile__title');
 const profileDescription = document.querySelector('.profile__description');
 const imagePopupImage = imagePopup.querySelector('.popup__image');
+const formPopupProfile = editPopup.querySelector('.popup__form');
+const nameEditInput = formPopupProfile.querySelector('.popup__input_type_name');
+const jobInput = formPopupProfile.querySelector('.popup__input_type_description');
+const formPopupAddOpen = addPopup.querySelector('.popup__form');
+const linkInput = formPopupAddOpen.querySelector('.popup__input_type_url');
+const formPopupEdit = editPopup.querySelector('.popup__form');
+const formPopupAdd = addPopup.querySelector('.popup__form');
+const nameInput = formPopupAdd.querySelector('.popup__input_type_card-name');
+const linkAddInput = formPopupAdd.querySelector('.popup__input_type_url');
+const Buttonsclose = document.querySelectorAll('.popup__close');
 
 setCardTemplate(cardTemplate);
 
 function openEditPopup() {
   openModal(editPopup);
-
-  const openEditFormElement = editPopup.querySelector('.popup__form');
-  const nameInput = openEditFormElement.querySelector('.popup__input_type_name');
-  const jobInput = openEditFormElement.querySelector('.popup__input_type_description');
-
-  nameInput.value = profileTitle.textContent;
+  nameEditInput.value = profileTitle.textContent;
   jobInput.value = profileDescription.textContent;
 }
 
@@ -30,10 +35,6 @@ document.querySelector('.profile__edit-button').addEventListener('click', openEd
 
 function openAddPopup() {
   openModal(addPopup);
-
-  const openAddFormElement = addPopup.querySelector('.popup__form');
-  const nameInput = openAddFormElement.querySelector('.popup__input_type_card-name');
-  const linkInput = openAddFormElement.querySelector('.popup__input_type_url');
 }
 
 document.querySelector('.profile__add-button').addEventListener('click', openAddPopup);
@@ -59,21 +60,15 @@ function renderCards(cardsArray) {
 
 renderCards(initialCards);
 
-const editFormElement = editPopup.querySelector('.popup__form');
-editFormElement.addEventListener('submit', handleFormSubmit);
-
-const addFormElement = addPopup.querySelector('.popup__form');
-addFormElement.addEventListener('submit', handleAddFormSubmit);
-
-setLikeCallback(likeCallback);
+formPopupEdit.addEventListener('submit', handleEditFormSubmit);
+formPopupAdd.addEventListener('submit', handleAddFormSubmit);
 
 function closeEditPopup() {
   closeModal(editPopup);
 }
 
 function closeAddPopup() {
-  const closeAddFormElement = addPopup.querySelector('.popup__form');
-  closeAddFormElement.reset();
+  formPopupAdd.reset();
   closeModal(addPopup);
 }
 
@@ -81,32 +76,21 @@ function closeImagePopup() {
   closeModal(imagePopup);
 }
 
-// Use event delegation for close buttons
-document.addEventListener('click', function (event) {
-  const closeButtons = document.querySelectorAll('.popup__close');
-  if (event.target.classList.contains('popup__close')) {
-    const popupType = event.target.closest('.popup').classList[1];
-    switch (popupType) {
-      case 'popup_type_edit':
-        closeEditPopup();
-        break;
-      case 'popup_type_new-card':
-        closeAddPopup();
-        break;
-      case 'popup_type_image':
-        closeImagePopup();
-        break;
-      default:
-        break;
-    }
-  }
+editPopup.addEventListener('click', closeOverlayClick);
+addPopup.addEventListener('click', closeOverlayClick);
+imagePopup.addEventListener('click', closeOverlayClick);
+
+document.addEventListener('keydown', closeEscPopup);
+
+Buttonsclose.forEach(button => {
+  button.addEventListener('click', handleCloseButtonClick);
 });
 
-function handleFormSubmit(evt) {
+function handleEditFormSubmit(evt) {
   evt.preventDefault();
 
-  const newName = editFormElement.querySelector('.popup__input_type_name').value;
-  const newJob = editFormElement.querySelector('.popup__input_type_description').value;
+  const newName = formPopupEdit.querySelector('.popup__input_type_name').value;
+  const newJob = formPopupEdit.querySelector('.popup__input_type_description').value;
 
   profileTitle.textContent = newName;
   profileDescription.textContent = newJob;
@@ -117,11 +101,8 @@ function handleFormSubmit(evt) {
 function handleAddFormSubmit(evt) {
   evt.preventDefault();
 
-  const nameInput = addFormElement.querySelector('.popup__input_type_card-name');
-  const linkInput = addFormElement.querySelector('.popup__input_type_url');
-
   const cardName = nameInput.value;
-  const cardLink = linkInput.value;
+  const cardLink = linkAddInput.value;
 
   const newCardData = {
     name: cardName,
@@ -134,4 +115,5 @@ function handleAddFormSubmit(evt) {
   placesList.prepend(newCard);
 
   closeAddPopup();
+  closeImagePopup();
 }
