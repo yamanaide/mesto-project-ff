@@ -1,8 +1,8 @@
 import '/src/pages/index.css';
 
-import { createCard, deleteCard, setCardTemplate } from './card.js';
+import { createCard, deleteCard, likeCallback, setCardTemplate, handleLikeCard } from './card.js';
 import { initialCards } from './cards.js';
-import { openModal, closeModal, closeOverlayClick, closeEscPopup, handleCloseButtonClick } from './modal.js';
+import { openModal, closeModal, closeOverlayClick, handleCloseButtonClick } from './modal.js';
 
 const cardTemplate = document.querySelector('#card-template').content.querySelector('.places__item');
 const placesList = document.querySelector('.places__list');
@@ -21,7 +21,7 @@ const formPopupEdit = editPopup.querySelector('.popup__form');
 const formPopupAdd = addPopup.querySelector('.popup__form');
 const nameInput = formPopupAdd.querySelector('.popup__input_type_card-name');
 const linkAddInput = formPopupAdd.querySelector('.popup__input_type_url');
-const Buttonsclose = document.querySelectorAll('.popup__close');
+const buttonsClose = document.querySelectorAll('.popup__close');
 
 setCardTemplate(cardTemplate);
 
@@ -50,7 +50,9 @@ function openImagePopup(imageUrl, imageAlt, imageCaption) {
 function renderCards(cardsArray) {
   cardsArray.forEach(function (card) {
     const newCard = createCard(card, deleteCard, function (imageUrl) {
-      openImagePopup(imageUrl, card.name, card.caption);
+      openImagePopup(imageUrl, card.name, card.name);
+    }, function (likeButton, cardData) {
+      handleLikeCard(likeButton, cardData);
     });
     if (newCard) {
       placesList.appendChild(newCard);
@@ -80,9 +82,7 @@ editPopup.addEventListener('click', closeOverlayClick);
 addPopup.addEventListener('click', closeOverlayClick);
 imagePopup.addEventListener('click', closeOverlayClick);
 
-document.addEventListener('keydown', closeEscPopup);
-
-Buttonsclose.forEach(button => {
+buttonsClose.forEach(button => {
   button.addEventListener('click', handleCloseButtonClick);
 });
 
@@ -110,10 +110,11 @@ function handleAddFormSubmit(evt) {
   };
 
   const newCard = createCard(newCardData, deleteCard, function (imageUrl) {
-    openImagePopup(imageUrl, newCardData.name, newCardData.caption);
+    openImagePopup(imageUrl, newCardData.name, newCardData.name);
+  }, function (likeButton, cardData) {
+    handleLikeCard(likeButton, cardData);
   });
   placesList.prepend(newCard);
 
   closeAddPopup();
-  closeImagePopup();
 }
