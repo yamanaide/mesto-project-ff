@@ -1,8 +1,8 @@
 import '/src/pages/index.css';
 
-import { createCard, deleteCard, likeCallback, setCardTemplate, handleLikeCard } from './card.js';
-import { initialCards } from './cards.js';
+import { renderCard, destroyCard, likeCallback, setCardTemplate, toggleLikeButton } from './card.js';
 import { openModal, closeModal, closeOverlayClick, handleCloseButtonClick } from './modal.js';
+import { getProfile, getCards, createCard, deleteCard, addLike, deleteLike, updateAvatar, updateProfile } from "./api.js"
 
 const cardTemplate = document.querySelector('#card-template').content.querySelector('.places__item');
 const placesList = document.querySelector('.places__list');
@@ -24,6 +24,40 @@ const linkAddInput = formPopupAdd.querySelector('.popup__input_type_url');
 const buttonsClose = document.querySelectorAll('.popup__close');
 
 setCardTemplate(cardTemplate);
+
+async function renderPage() {
+  await Promise.all([getProfile(), getCards()])
+    .then(([user, cards]) => {
+      profileTitle.textContent = user.name;
+      profileDescription.textContent = user.about;
+
+      const id = user._id;
+      cards.forEach(function (card) {
+        const isMine = card.owner._id === id;
+        const newCard = renderCard(card, isMine, card.likes.length, async function(cardElement) {
+          const deleted = await deleteCard(card._id);
+          if (deleted) destroyCard(cardElement);
+        }, function (imageUrl) {
+          openImagePopup(imageUrl, card.name, card.name);
+        }, function (likeButton) {
+          toggleLikeButton(likeButton, async function() {
+              await addLike(card._id)
+            }, async function() {
+              await deleteLike(card._id)
+            });
+        });
+
+        if (newCard) {
+          placesList.appendChild(newCard);
+        }
+      });
+    })
+    .catch(error => {
+      console.log(error);
+    })
+}
+
+await renderPage();
 
 function openEditPopup() {
   openModal(editPopup);
@@ -47,23 +81,8 @@ function openImagePopup(imageUrl, imageAlt, imageCaption) {
   openModal(imagePopup);
 }
 
-function renderCards(cardsArray) {
-  cardsArray.forEach(function (card) {
-    const newCard = createCard(card, deleteCard, function (imageUrl) {
-      openImagePopup(imageUrl, card.name, card.name);
-    }, function (likeButton, cardData) {
-      handleLikeCard(likeButton, cardData);
-    });
-    if (newCard) {
-      placesList.appendChild(newCard);
-    }
-  });
-}
-
-renderCards(initialCards);
-
-formPopupEdit.addEventListener('submit', handleEditFormSubmit);
-formPopupAdd.addEventListener('submit', handleAddFormSubmit);
+formPopupEdit.addEventListener('submit', await handleEditFormSubmit);
+formPopupAdd.addEventListener('submit', await handleAddFormSubmit);
 
 function closeEditPopup() {
   closeModal(editPopup);
@@ -86,19 +105,24 @@ buttonsClose.forEach(button => {
   button.addEventListener('click', handleCloseButtonClick);
 });
 
-function handleEditFormSubmit(evt) {
+async function handleEditFormSubmit(evt) {
   evt.preventDefault();
 
   const newName = formPopupEdit.querySelector('.popup__input_type_name').value;
   const newJob = formPopupEdit.querySelector('.popup__input_type_description').value;
 
-  profileTitle.textContent = newName;
-  profileDescription.textContent = newJob;
+  const data = await updateProfile({
+    name: newName,
+    about: newJob,
+  })
+
+  profileTitle.textContent = data.name;
+  profileDescription.textContent = data.about;
 
   closeEditPopup();
 }
 
-function handleAddFormSubmit(evt) {
+async function handleAddFormSubmit(evt) {
   evt.preventDefault();
 
   const cardName = nameInput.value;
@@ -109,11 +133,21 @@ function handleAddFormSubmit(evt) {
     link: cardLink
   };
 
-  const newCard = createCard(newCardData, deleteCard, function (imageUrl) {
-    openImagePopup(imageUrl, newCardData.name, newCardData.name);
-  }, function (likeButton, cardData) {
-    handleLikeCard(likeButton, cardData);
-  });
+  const data = await createCard(newCardData)
+
+  const newCard = renderCard(
+    data,
+    true,
+    async function(cardElement) {
+      const deleted = await deleteCard(data._id)
+      if (deleted) destroyCard(cardElement)
+    }, function (imageUrl) {
+      openImagePopup(imageUrl, data.name, data.name);
+    }, async function (likeButton, cardData) {
+      await addLike(data._id)
+      toggleLikeButton(likeButton, cardData);
+    },
+  );
   placesList.prepend(newCard);
 
   closeAddPopup();
