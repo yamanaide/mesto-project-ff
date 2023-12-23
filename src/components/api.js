@@ -6,16 +6,19 @@ const config = {
   }
 }
 
+const getResponseData = (res) => {
+  if (res.ok) {
+    return res.json()
+  }
+  return Promise.reject(`Ошибка: ${res.status}`);
+}
+
 export const getCards = async () => {
   return fetch(`${config.baseUrl}/cards`, {
     headers: config.headers,
   })
   .then(res => {
-    if (res.ok) {
-      return res.json()
-    }
-
-    return Promise.reject(`Ошибка: ${res.status}`);
+    return getResponseData(res)
   });
 }
 
@@ -24,11 +27,7 @@ export const getProfile = async () => {
     headers: config.headers,
   })
   .then(res => {
-    if (res.ok) {
-      return res.json();
-    }
-
-    return Promise.reject(`Ошибка: ${res.status}`);
+    return getResponseData(res)
   });
 }
 
@@ -39,11 +38,7 @@ export const updateProfile = async (data) => {
     body: JSON.stringify(data),
   })
   .then(res => {
-    if (res.ok) {
-      return res.json();
-    }
-
-    return Promise.reject(`Ошибка: ${res.status}`);
+    return getResponseData(res)
   });
 }
 
@@ -54,11 +49,7 @@ export const createCard = async (data) => {
     body: JSON.stringify(data),
   })
   .then(res => {
-    if (res.ok) {
-      return res.json();
-    }
-
-    return Promise.reject(`Ошибка: ${res.status}`);
+    return getResponseData(res)
   });
 }
 
@@ -68,11 +59,7 @@ export const deleteCard = async (id) => {
     method: "DELETE",
   })
   .then(res => {
-    if (res.ok) {
-      return res.json();
-    }
-
-    return Promise.reject(`Ошибка: ${res.status}`);
+    return getResponseData(res)
   });
 }
 
@@ -82,11 +69,7 @@ export const addLike = async (id) => {
     method: "PUT",
   })
   .then(res => {
-    if (res.ok) {
-      return res.json();
-    }
-
-    return Promise.reject(`Ошибка: ${res.status}`);
+    return getResponseData(res)
   });
 }
 
@@ -96,15 +79,18 @@ export const deleteLike = async (id) => {
     method: "DELETE",
   })
   .then(res => {
-    if (res.ok) {
-      return res.json();
-    }
-
-    return Promise.reject(`Ошибка: ${res.status}`);
+    return getResponseData(res)
   });
 }
 
-export const updateAvatar = async () => {
-
+export const updateAvatar = async (url) => {
+  return fetch(`${config.baseUrl}/users/me/avatar`, {
+    headers: config.headers,
+    method: "PATCH",
+    body: JSON.stringify({ avatar: url }),
+  })
+  .then(res => {
+    return getResponseData(res)
+  });
 }
 
