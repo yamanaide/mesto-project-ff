@@ -1,10 +1,10 @@
 const cardTemplate = document.querySelector('#card-template').content.querySelector('.places__item');
 
-function isLiked(buttonLike) {
+export function isLiked(buttonLike) {
   return buttonLike.classList.contains('card__like-button_is-active')
 }
 
-function toggleLikeButton(buttonLike) {
+export function toggleLikeButton(buttonLike) {
   if (isLiked(buttonLike)) {
     buttonLike.classList.remove('card__like-button_is-active');
   } else {
@@ -12,9 +12,12 @@ function toggleLikeButton(buttonLike) {
   }
 }
 
+export function destroyCard(cardElement) {
+  cardElement.remove()
+}
+
 export function renderCard(
   cardData,
-  count,
   deleteCallback,
   openImagePopup,
   addLikeCallback,
@@ -33,10 +36,10 @@ export function renderCard(
   cardTitle.textContent = cardData.name;
   cardImage.src = cardData.link;
   cardImage.alt = cardData.name;
-  likeCount.textContent = count;
+  likeCount.textContent = cardData.likes.length;
 
   if (!isMine) {
-    deleteButton.hidden = true;
+    deleteButton.remove()
   }
 
   cardData.likes.forEach(user => {
@@ -45,24 +48,15 @@ export function renderCard(
     }
   })
 
-  deleteButton.addEventListener('click', function() {
-    deleteCallback(cardData._id)
-      .then(deleted => {
-        if (deleted) cardElement.remove()
-      })
-  });
+  deleteButton.addEventListener('click', deleteCallback);
 
   cardImage.addEventListener('click', function () {
     openImagePopup(cardData.link, cardData.name, cardData.name);
   });
 
   likeButton.addEventListener('click', function () {
-    const handler = isLiked(likeButton) ? deleteLikeCallback : addLikeCallback;
-    handler(cardData._id)
-      .then(card => {
-        toggleLikeButton(likeButton);
-        likeCount.textContent = card.likes.length;
-      })
+    const id = cardData._id;
+    isLiked(likeButton) ? deleteLikeCallback(id, likeButton, likeCount) : addLikeCallback(id, likeButton, likeCount);
   });
 
   return cardElement;

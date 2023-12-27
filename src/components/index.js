@@ -1,7 +1,7 @@
 import '/src/pages/index.css';
 
-import { renderCard } from './card.js';
-import { openModal, closeModal, closeOverlayClick, handleCloseButtonClick } from './modal.js';
+import { destroyCard, renderCard, toggleLikeButton } from './card.js';
+import { openModal, closeModal, closeOverlayClick, handleCloseButtonClick, AddModalAnimation } from './modal.js';
 import { getProfile, getCards, createCard, deleteCard, addLike, deleteLike, updateAvatar, updateProfile } from "./api.js"
 import { clearValidation, enableValidation } from './validation.js';
 
@@ -22,6 +22,8 @@ const jobInput = formPopupProfile.querySelector('.popup__input_type_description'
 const formPopupAddOpen = addPopup.querySelector('.popup__form');
 const linkInput = formPopupAddOpen.querySelector('.popup__input_type_url');
 const formPopupEdit = editPopup.querySelector('.popup__form');
+const newNameInput = formPopupEdit.querySelector('.popup__input_type_name');
+const newAboutInput = formPopupEdit.querySelector('.popup__input_type_description');
 const formPopupAdd = addPopup.querySelector('.popup__form');
 const nameInput = formPopupAdd.querySelector('.popup__input_type_card-name');
 const linkAddInput = formPopupAdd.querySelector('.popup__input_type_url');
@@ -40,15 +42,12 @@ const validationOptions = {
 enableValidation(validationOptions)
 
 function displayCard(cardData) {
-  const likeCount = cardData.likes.length;
-
   const newCard = renderCard(
     cardData,
-    likeCount,
-    deleteCard,
+    handleDeleteCard,
     openImagePopup,
-    addLike,
-    deleteLike,
+    handleAddLike,
+    handleDeleteLike,
     userId,
   )
   
@@ -100,6 +99,10 @@ function openImagePopup(imageUrl, imageAlt, imageCaption) {
   openModal(imagePopup);
 }
 
+AddModalAnimation(editPopup)
+AddModalAnimation(avatarPopup)
+AddModalAnimation(addPopup)
+
 formPopupEdit.addEventListener('submit', handleEditFormSubmit);
 formPopupAdd.addEventListener('submit', handleAddFormSubmit);
 formPopupAvatar.addEventListener('submit', handleAvatarFormSubmit);
@@ -112,13 +115,37 @@ buttonsClose.forEach(button => {
   button.addEventListener('click', handleCloseButtonClick);
 });
 
+function handleDeleteCard(id, cardElement) {
+  deleteCard(id)
+    .then(deleted => {
+      if (deleted) destroyCard(cardElement)
+    })
+}
+
+function handleAddLike(id, likeButton, likeCount) {
+  addLike(id)
+    .then(card => {
+      toggleLikeButton(likeButton);
+      likeCount.textContent = card.likes.length;
+    })
+}
+
+function handleDeleteLike(id, likeButton, likeCount) {
+  deleteLike(id)
+    .then(card => {
+      toggleLikeButton(likeButton);
+      likeCount.textContent = card.likes.length;
+    })
+
+}
+
 function handleEditFormSubmit(evt) {
   evt.preventDefault();
 
-  const button = evt.target.querySelector(".popup__button")
+  const button = evt.submitter
 
-  const newName = formPopupEdit.querySelector('.popup__input_type_name').value;
-  const newAbout = formPopupEdit.querySelector('.popup__input_type_description').value;
+  const newName = newNameInput.value;
+  const newAbout = newAboutInput.value;
 
   const newData = {
     name: newName,
@@ -130,17 +157,18 @@ function handleEditFormSubmit(evt) {
     .then(data => {
       profileTitle.textContent = data.name;
       profileDescription.textContent = data.about;
-    })
-    .then(() => {
+
       closeModal(editPopup);
-      button.textContent = "Сохранить"
+    })
+    .finally(() => {
+      button.textContent = "Сохранить";
     })
 }
 
 function handleAddFormSubmit(evt) {
   evt.preventDefault();
 
-  const button = evt.target.querySelector(".popup__button")
+  const button = evt.submitter
 
   const cardName = nameInput.value;
   const cardLink = linkAddInput.value;
@@ -155,17 +183,18 @@ function handleAddFormSubmit(evt) {
     .then(cardData => {
       const newCard = displayCard(cardData, userId);
       placesList.prepend(newCard);
-    })
-    .then(() => {
+
       closeModal(addPopup);
-      button.textContent = "Сохранить"
+    })
+    .finally(() => {
+      button.textContent = "Создать";
     })
 }
 
 function handleAvatarFormSubmit(evt) {
   evt.preventDefault();
 
-  const button = evt.target.querySelector(".popup__button");
+  const button = evt.submitter
   
   const newAvatar = avatarInput.value;
 
@@ -174,9 +203,10 @@ function handleAvatarFormSubmit(evt) {
     .then(data => {
       const avatar = data.avatar;
       profileImage.style.backgroundImage = `url(${avatar})`
-    })
-    .then(() => {
+
       closeModal(avatarPopup);
+    })
+    .finally(() => {
       button.textContent = "Сохранить";
     })
 }
